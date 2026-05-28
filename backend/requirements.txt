@@ -1,0 +1,13 @@
+fastapi
+uvicorn
+sqlalchemy
+psycopg2-binary
+langchain
+langchain-openai
+langchain-google-genai
+chromadb
+rank_bm25
+pypdf
+pydantic
+python-dotenv
+python-multipart

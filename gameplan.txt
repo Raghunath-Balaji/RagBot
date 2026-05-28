@@ -1,0 +1,137 @@
+PROJECT IMPLEMENTATION PLAN: RAG-BASED CHATBOT SYSTEM
+TARGET TIMELINE: 3 DAYS
+TARGET AUDIENCE: AI AGENTS / AUTONOMOUS DEVELOPERS
+
+===============================================================================
+1. OVERVIEW & TECH STACK
+===============================================================================
+Execute the end-to-end implementation of a Retrieval-Augmented Generation (RAG) 
+chatbot system. The architecture consists of a user portal for chatting 
+and an admin portal for document management.
+
+Backend Stack:
+- Framework: Python FastAPI (Asynchronous processing)
+- Relational DB: PostgreSQL (via SQLAlchemy ORM)
+- Vector DB: ChromaDB or FAISS (Local persistence)[cite: 1]
+- AI Layer: LangChain, OpenAI API (Embeddings + LLM chat generation)[cite: 1]
+
+Frontend Stack:
+- Framework: React / Next.js[cite: 1]
+- Styling: Tailwind CSS[cite: 1]
+
+Advanced Features to Implement:
+- Token Streaming via Server-Sent Events (SSE)[cite: 1]
+- Hybrid Search (BM25 Keyword Search + Vector Similarity Search)[cite: 1]
+- Production Architecture: Strict FastAPI Dependency Injection (Depends())
+
+===============================================================================
+2. TARGET DIRECTORY STRUCTURE
+===============================================================================
+Initialize the workspace with the following file layout[cite: 1]:
+
+backend/
+├── app/
+│   ├── __init__.py
+│   ├── main.py[cite: 1]
+│   ├── api/          # Route handlers[cite: 1]
+│   │   ├── __init__.py
+│   │   ├── admin.py
+│   │   ├── chat.py
+│   │   └── health.py
+│   ├── database/     # DB initialization & connections[cite: 1]
+│   │   ├── __init__.py
+│   │   ├── postgres.py
+│   │   └── vectorstore.py
+│   ├── models/       # SQLAlchemy schemas[cite: 1]
+│   │   ├── __init__.py
+│   │   ├── chat.py
+│   │   └── document.py
+│   ├── rag/          # Core RAG pipelines (ingestion & retrieval)[cite: 1]
+│   │   ├── __init__.py
+│   │   ├── pipeline.py
+│   │   └── stream_handler.py
+│   ├── services/     # Business logic separation[cite: 1]
+│   └── utils/        # Parsers and helpers[cite: 1]
+├── requirements.txt[cite: 1]
+└── .env
+
+frontend/
+├── src/
+│   ├── components/
+│   │   ├── ChatWindow.jsx
+│   │   └── AdminPanel.jsx
+│   ├── App.jsx
+│   └── main.jsx
+├── package.json
+└── tailwind.config.js
+
+===============================================================================
+3. DAY 1 TASKS: INFRASTRUCTURE, SCHEMAS, AND CORE BOILERPLATE
+===============================================================================
+Task 1.1: Backend Environment Initialization
+- Create `backend/requirements.txt` containing: fastapi, uvicorn, sqlalchemy, 
+  psycopg2-binary, langchain, langchain-openai, chromadb, rank_bm25, pypdf, pydantic.[cite: 1]
+- Set up a `.env` file containing database strings and `OPENAI_API_KEY`.
+
+Task 1.2: Relational Database Configurations & Models
+- Implement database session generation using SQLAlchemy in `backend/app/database/postgres.py`.
+- Define database models in `backend/app/models/`[cite: 1]:
+  1. `documents` table: id (UUID/Int), filename (String), uploaded_by (String), 
+     upload_date (DateTime), processing_status (String)[cite: 1].
+  2. `chat_history` table: id (UUID/Int), question (Text), answer (Text), 
+     timestamp (DateTime)[cite: 1].
+
+Task 1.3: Vector and Keyword Store Initialization
+- In `backend/app/database/vectorstore.py`, write initialization logic for local ChromaDB.
+- Set up persistent file paths for storing vectors.
+- Initialize a local configuration structure for the BM25 keyword index to cache raw chunks.
+
+Task 1.4: Frontend Initialization
+- Bootstrapping a React application with Vite.
+- Install and configure Tailwind CSS[cite: 1]. Verify the compilation pipeline works.
+
+===============================================================================
+4. DAY 2 TASKS: CORE RAG PIPELINE & FASTAPI ENDPOINTS
+===============================================================================
+Task 2.1: Implement Document Processing Ingestion Flow
+- Write ingestion logic inside `backend/app/rag/pipeline.py` corresponding to the PDF workflow[cite: 1]:
+  1. Parse PDF binaries using `pypdf` or LangChain loaders[cite: 1].
+  2. Implement text splitting: Chunk Size = 500-1000 tokens, Overlap = 100-200 tokens[cite: 1].
+  3. Generate embeddings using OpenAI's embedding model[cite: 1].
+  4. Upsert vector arrays to ChromaDB and insert raw text chunks into the BM25 index[cite: 1].
+
+Task 2.2: Implement Hybrid Search & Streaming Flow
+- Inside `backend/app/rag/pipeline.py`, construct an `EnsembleRetriever` configuration:
+  - Component A: ChromaDB Vector Similarity Search[cite: 1].
+  - Component B: BM25 Keyword Search[cite: 1].
+  - Merge strategy: Use Reciprocal Rank Fusion (RRF) to combine candidate chunks[cite: 1].
+- In `backend/app/rag/stream_handler.py`, write an async generator that takes user queries, 
+  retrieves context via the `EnsembleRetriever`, feeds it to an OpenAI ChatModel wrapper, 
+  and streams tokens using Server-Sent Events (`StreamingResponse` with `text/event-stream` media type)[cite: 1].
+
+Task 2.3: Build REST API Routes
+- Use FastAPI Dependency Injection (`Depends()`) to inject PostgreSQL database sessions and VectorDB instances into all routes.
+- Implement the following endpoints explicitly matching "RAG_Chatbot_Project_Plan.pdf"[cite: 1]:
+  * `POST /upload-pdf`: Receives file binary, records state in database, runs async chunking/embedding[cite: 1].
+  * `GET /documents`: Queries database for all file metadata[cite: 1].
+  * `DELETE /documents/{id}`: Drops file record, drops vectors via document ID metadata filtering[cite: 1].
+  * `POST /chat`: Orchestrates query embedding generation, retrieval, and streams back token responses[cite: 1].
+  * `GET /chat-history`: Returns historical logs from the database sorted by timestamp[cite: 1].
+  * `GET /health`: Basic operational validation returning up-time status[cite: 1].
+
+===============================================================================
+5. DAY 3 TASKS: FRONTEND IMPLEMENTATION AND SYSTEM INTEGRATION
+===============================================================================
+Task 3.1: Admin Portal Components
+- In `frontend/src/components/AdminPanel.jsx`, implement a drag-and-drop or file selector input[cite: 1].
+- Wire the upload component to trigger a `multipart/form-data` payload to `POST /upload-pdf`[cite: 1].
+- Implement a status rendering table connected to `GET /documents` with action elements linking to `DELETE /documents/{id}`[cite: 1].
+
+Task 3.2: User Portal Components
+- In `frontend/src/components/ChatWindow.jsx`, design a conversational list pane mapping message histories[cite: 1].
+- Connect the message input component to `POST /chat`.
+- Implement a reader mechanism via native browser `fetch` or EventSource APIs to loop over the SSE stream, appending incoming string tokens to the current view message block in real-time[cite: 1].
+- Load previous user chat exchanges on initial layout rendering using `GET /chat-history`[cite: 1].
+
+Task 3.3: Execution and E2E Validation
+- Verify the following pipeline behavior: Admin uploads document -> Worker chunks, embeds, and saves vectors -> User asks specialized question -> System executes hybrid lookup -> Context passes to LLM -> Answer streams back with relevant document context[cite: 1].
