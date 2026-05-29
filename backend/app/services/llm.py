@@ -13,19 +13,22 @@ class LLMService:
 
 
     def provider_config(self, apikey):
-        if apikey.startswith("AIza"):
-            self.provider = "gemini"
+        llm_mode = os.getenv("MODE")
+        if llm_mode.lower() == "gemini":
+            self.provider = llm_mode
             from langchain_google_genai import ChatGoogleGenerativeAI
+            model_name = os.getenv("LLM_MODEL")
             self.llm = ChatGoogleGenerativeAI(
-                model = "gemini-2.5-flash",
+                model = model_name,
                 google_api_key = apikey,
                 streaming = True
             )
         else:
-            self.provider = "openai"
+            self.provider = llm_mode
             from langchain_openai import ChatOpenAI
+            model_name = os.getenv("LLM_MODEL")
             self.llm = ChatOpenAI(
-                model = "gpt-3.5-turbo",
+                model = model_name,
                 openai_api_key = apikey,
                 streaming  = True
             )

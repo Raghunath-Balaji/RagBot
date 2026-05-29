@@ -1,0 +1,50 @@
+# Environment Variables
+.env
+.env.*
+**/.env
+**/.env.*
+
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+env/
+venv/
+ENV/
+env.bak/
+venv.bak/
+.venv/
+.env/
+
+# Node.js
+node_modules/
+dist/
+dist-ssr/
+*.local
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# Database & Storage
+chroma_db/
+uploads/*
+!uploads/.gitkeep
+
+# Editor & OS
+.vscode/
+!.vscode/extensions.json
+.idea/
+.DS_Store
+*.swp
+*.swo
+
+# # Project specific temp files
+# debug_imports.py
+# locate_class.py
+# ignore.txt
+# gameplan.txt
+# check_docs.py
+# frontend-refactor-header.md
+# C:/Users/raghunath.balaji/.gemini/tmp/ragbot/08f58c7d-f223-4146-8a90-3b57b3cbbb4f/plans/frontend-refactor-header.md

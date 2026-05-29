@@ -10,8 +10,11 @@ CHROMA_PATH = "chroma_db"
 
 def get_embeddings():
     api_key = os.getenv("LLM_API_KEY")
-    if api_key.startswith("AIza"):
-        return GoogleGenerativeAIEmbeddings(model="models/gemini-embedding-001", google_api_key=api_key)
+    
+    model = os.getenv("MODE")
+    if model == "gemini":
+        text_encoder = os.getenv("ENCODER_MODEL")
+        return GoogleGenerativeAIEmbeddings(model=text_encoder, google_api_key=api_key)
     else:
         return OpenAIEmbeddings(openai_api_key=api_key)
 

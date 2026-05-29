@@ -1,32 +1,35 @@
-import React, { useState, useEffect, useRef } from 'react';
-import { Send, User, Bot, Loader2 } from 'lucide-react';
+import React, { useState, useEffect, useRef } from "react";
+import { Send, User, Bot, Loader2 } from "lucide-react";
 
 interface Message {
-  role: 'user' | 'assistant';
+  role: "user" | "assistant";
   content: string;
 }
 
 const ChatbotScreen = () => {
   const [messages, setMessages] = useState<Message[]>([]);
-  const [input, setInput] = useState('');
+  const [input, setInput] = useState("");
   const [isLoading, setIsLoading] = useState(false);
   const messagesEndRef = useRef<HTMLDivElement>(null);
 
   const scrollToBottom = () => {
-    messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
+    messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
   };
 
   useEffect(() => {
     const fetchHistory = async () => {
       try {
-        const response = await fetch('/api/chat/history');
+        const response = await fetch("/api/chat/history");
         if (response.ok) {
           const data = await response.json();
           // Backend returns descending order, reverse it for chronological display
-          const history = data.reverse().map((chat: any) => [
-            { role: 'user', content: chat.question },
-            { role: 'assistant', content: chat.answer }
-          ]).flat();
+          const history = data
+            .reverse()
+            .map((chat: any) => [
+              { role: "user", content: chat.question },
+              { role: "assistant", content: chat.answer },
+            ])
+            .flat();
           setMessages(history);
         }
       } catch (err) {
@@ -45,14 +48,14 @@ const ChatbotScreen = () => {
     if (!input.trim() || isLoading) return;
 
     const userMessage = input.trim();
-    setInput('');
-    setMessages(prev => [...prev, { role: 'user', content: userMessage }]);
+    setInput("");
+    setMessages((prev) => [...prev, { role: "user", content: userMessage }]);
     setIsLoading(true);
 
     try {
-      const response = await fetch('/api/chat/', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+      const response = await fetch("/api/chat/", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ message: userMessage }),
       });
 
@@ -60,29 +63,30 @@ const ChatbotScreen = () => {
 
       const reader = response.body.getReader();
       const decoder = new TextDecoder();
-      let assistantMessage = '';
+      let assistantMessage = "";
 
-      setMessages(prev => [...prev, { role: 'assistant', content: '' }]);
+      setMessages((prev) => [...prev, { role: "assistant", content: "" }]);
 
       while (true) {
         const { done, value } = await reader.read();
         if (done) break;
 
         const chunk = decoder.decode(value);
-        const lines = chunk.split('\n');
+        const lines = chunk.split("\n");
 
         for (const line of lines) {
-          if (line.startsWith('data: ')) {
+          if (line.startsWith("data: ")) {
             const dataStr = line.slice(6).trim();
-            if (dataStr === '[DONE]') continue;
+            if (dataStr === "[DONE]") continue;
 
             try {
               const data = JSON.parse(dataStr);
               if (data.token) {
                 assistantMessage += data.token;
-                setMessages(prev => {
+                setMessages((prev) => {
                   const newMessages = [...prev];
-                  newMessages[newMessages.length - 1].content = assistantMessage;
+                  newMessages[newMessages.length - 1].content =
+                    assistantMessage;
                   return newMessages;
                 });
               } else if (data.error) {
@@ -96,7 +100,13 @@ const ChatbotScreen = () => {
       }
     } catch (err) {
       console.error("Chat error:", err);
-      setMessages(prev => [...prev, { role: 'assistant', content: "Sorry, I encountered an error. Please try again." }]);
+      setMessages((prev) => [
+        ...prev,
+        {
+          role: "assistant",
+          content: "Sorry, I encountered an error. Please try again.",
+        },
+      ]);
     } finally {
       setIsLoading(false);
     }
@@ -112,9 +122,12 @@ const ChatbotScreen = () => {
               <Bot className="w-10 h-10 text-blue-600" />
             </div>
             <div>
-              <h2 className="text-xl font-bold text-gray-800">Welcome to RAGbot</h2>
+              <h2 className="text-xl font-bold text-gray-800">
+                Welcome to RAGbot
+              </h2>
               <p className="text-gray-500 max-w-sm">
-                Ask me anything about your uploaded documents! I'll provide answers based on the context.
+                Ask me anything about your uploaded documents! I'll provide
+                answers based on the context.
               </p>
             </div>
           </div>
@@ -123,25 +136,37 @@ const ChatbotScreen = () => {
         {messages.map((msg, index) => (
           <div
             key={index}
-            className={`flex ${msg.role === 'user' ? 'justify-end' : 'justify-start'}`}
+            className={`flex ${msg.role === "user" ? "justify-end" : "justify-start"}`}
           >
-            <div className={`flex max-w-[80%] gap-3 ${msg.role === 'user' ? 'flex-row-reverse' : 'flex-row'}`}>
-              <div className={`w-8 h-8 rounded-full flex items-center justify-center shrink-0 ${
-                msg.role === 'user' ? 'bg-blue-600' : 'bg-gray-200'
-              }`}>
-                {msg.role === 'user' ? <User className="w-5 h-5 text-white" /> : <Bot className="w-5 h-5 text-gray-600" />}
+            <div
+              className={`flex max-w-[80%] gap-3 ${msg.role === "user" ? "flex-row-reverse" : "flex-row"}`}
+            >
+              <div
+                className={`w-8 h-8 rounded-full flex items-center justify-center shrink-0 ${
+                  msg.role === "user" ? "bg-blue-600" : "bg-gray-200"
+                }`}
+              >
+                {msg.role === "user" ? (
+                  <User className="w-5 h-5 text-white" />
+                ) : (
+                  <Bot className="w-5 h-5 text-gray-600" />
+                )}
               </div>
-              <div className={`p-4 rounded-2xl shadow-sm ${
-                msg.role === 'user' 
-                  ? 'bg-blue-600 text-white rounded-tr-none' 
-                  : 'bg-white border border-gray-100 text-gray-800 rounded-tl-none'
-              }`}>
-                <p className="whitespace-pre-wrap leading-relaxed">{msg.content}</p>
+              <div
+                className={`p-4 rounded-2xl shadow-sm ${
+                  msg.role === "user"
+                    ? "bg-blue-600 text-white rounded-tr-none"
+                    : "bg-white border border-gray-100 text-gray-800 rounded-tl-none"
+                }`}
+              >
+                <p className="whitespace-pre-wrap leading-relaxed">
+                  {msg.content}
+                </p>
               </div>
             </div>
           </div>
         ))}
-        {isLoading && messages[messages.length - 1]?.role === 'user' && (
+        {isLoading && messages[messages.length - 1]?.role === "user" && (
           <div className="flex justify-start">
             <div className="flex max-w-[80%] gap-3">
               <div className="w-8 h-8 rounded-full bg-gray-200 flex items-center justify-center shrink-0">
@@ -159,7 +184,7 @@ const ChatbotScreen = () => {
 
       {/* Input Area */}
       <div className="py-6 bg-gray-50">
-        <form 
+        <form
           onSubmit={handleSendMessage}
           className="relative bg-white border border-gray-200 rounded-2xl shadow-lg focus-within:ring-2 focus-within:ring-blue-500 transition-all overflow-hidden"
         >
@@ -167,7 +192,7 @@ const ChatbotScreen = () => {
             value={input}
             onChange={(e) => setInput(e.target.value)}
             onKeyDown={(e) => {
-              if (e.key === 'Enter' && !e.shiftKey) {
+              if (e.key === "Enter" && !e.shiftKey) {
                 e.preventDefault();
                 handleSendMessage(e);
               }
@@ -181,16 +206,16 @@ const ChatbotScreen = () => {
             type="submit"
             disabled={!input.trim() || isLoading}
             className={`absolute right-3 bottom-3 p-2 rounded-xl transition-colors ${
-              !input.trim() || isLoading 
-                ? 'bg-gray-100 text-gray-400 cursor-not-allowed' 
-                : 'bg-blue-600 text-white hover:bg-blue-700'
+              !input.trim() || isLoading
+                ? "bg-gray-100 text-gray-400 cursor-not-allowed"
+                : "bg-blue-600 text-white hover:bg-blue-700"
             }`}
           >
             <Send className="w-5 h-5" />
           </button>
         </form>
         <p className="mt-2 text-center text-xs text-gray-400">
-          RAGbot uses your uploaded documents for context. Responses are generated by AI.
+          AI generated text, for prototype purposes only
         </p>
       </div>
     </div>

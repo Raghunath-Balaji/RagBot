@@ -11,3 +11,4 @@ pypdf
 pydantic
 python-dotenv
 python-multipart
+langchain-cohere
