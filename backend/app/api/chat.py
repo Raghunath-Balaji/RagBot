@@ -45,3 +45,13 @@ async def chat(request: ChatRequest, db: Session = Depends(get_db)):
 async def get_history(db: Session = Depends(get_db)):
     history = db.query(ChatHistory).order_by(ChatHistory.timestamp.desc()).all()
     return history
+
+@router.delete("/history")
+async def clear_history(db: Session = Depends(get_db)):
+    try:
+        db.query(ChatHistory).delete()
+        db.commit()
+        return {"message": "Chat history cleared successfully"}
+    except Exception as e:
+        db.rollback()
+        raise HTTPException(status_code=500, detail=f"Failed to clear chat history: {str(e)}")

@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef } from "react";
-import { Send, User, Bot, Loader2 } from "lucide-react";
+import { Send, User, Bot, Loader2, Trash2 } from "lucide-react";
 import { ChatBubbleSkeleton } from "../ui/ChatBubbleSkeleton";
 
 interface Message {
@@ -12,6 +12,7 @@ const ChatbotScreen = () => {
   const [input, setInput] = useState("");
   const [isLoading, setIsLoading] = useState(false);
   const [isInitialLoading, setIsInitialLoading] = useState(true);
+  const [isClearing, setIsClearing] = useState(false);
   const messagesEndRef = useRef<HTMLDivElement>(null);
 
   const scrollToBottom = () => {
@@ -49,6 +50,30 @@ const ChatbotScreen = () => {
       scrollToBottom();
     }
   }, [messages, isInitialLoading]);
+
+  const handleClearChat = async () => {
+    if (
+      !window.confirm("Are you sure you want to clear the entire chat history?")
+    )
+      return;
+
+    setIsClearing(true);
+    try {
+      const response = await fetch("/api/chat/history", {
+        method: "DELETE",
+      });
+      if (response.ok) {
+        setMessages([]);
+      } else {
+        throw new Error("Failed to clear chat history");
+      }
+    } catch (err) {
+      console.error("Clear chat error:", err);
+      alert("Failed to clear chat history. Please try again.");
+    } finally {
+      setIsClearing(false);
+    }
+  };
 
   const handleSendMessage = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -129,6 +154,28 @@ const ChatbotScreen = () => {
 
   return (
     <div className="flex flex-col h-full max-w-4xl mx-auto px-4">
+      {/* Chat Header */}
+      <div className="flex items-center justify-between py-4 border-b border-gray-100">
+        <h1 className="text-lg font-semibold text-gray-800 flex items-center gap-2">
+          <Bot className="w-5 h-5 text-blue-600" />
+          Chat Support
+        </h1>
+        {messages.length > 0 && (
+          <button
+            onClick={handleClearChat}
+            disabled={isClearing}
+            className="flex items-center gap-2 px-3 py-1.5 text-sm font-medium text-red-600 hover:bg-red-50 rounded-lg transition-colors disabled:opacity-50"
+          >
+            {isClearing ? (
+              <Loader2 className="w-4 h-4 animate-spin" />
+            ) : (
+              <Trash2 className="w-4 h-4" />
+            )}
+            Clear Chat
+          </button>
+        )}
+      </div>
+
       {/* Messages Area */}
       <div className="flex-1 overflow-y-auto py-6 space-y-6 scrollbar-hide">
         {messages.length === 0 && !isLoading && (
