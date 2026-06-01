@@ -1,5 +1,6 @@
 import React, { useState, useEffect, useRef } from "react";
 import { Send, User, Bot, Loader2 } from "lucide-react";
+import { ChatBubbleSkeleton } from "../ui/ChatBubbleSkeleton";
 
 interface Message {
   role: "user" | "assistant";
@@ -10,6 +11,7 @@ const ChatbotScreen = () => {
   const [messages, setMessages] = useState<Message[]>([]);
   const [input, setInput] = useState("");
   const [isLoading, setIsLoading] = useState(false);
+  const [isInitialLoading, setIsInitialLoading] = useState(true);
   const messagesEndRef = useRef<HTMLDivElement>(null);
 
   const scrollToBottom = () => {
@@ -18,6 +20,7 @@ const ChatbotScreen = () => {
 
   useEffect(() => {
     const fetchHistory = async () => {
+      setIsInitialLoading(true);
       try {
         const response = await fetch("/api/chat/history");
         if (response.ok) {
@@ -34,14 +37,18 @@ const ChatbotScreen = () => {
         }
       } catch (err) {
         console.error("Failed to fetch chat history:", err);
+      } finally {
+        setIsInitialLoading(false);
       }
     };
     fetchHistory();
   }, []);
 
   useEffect(() => {
-    scrollToBottom();
-  }, [messages]);
+    if (!isInitialLoading) {
+      scrollToBottom();
+    }
+  }, [messages, isInitialLoading]);
 
   const handleSendMessage = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -111,6 +118,14 @@ const ChatbotScreen = () => {
       setIsLoading(false);
     }
   };
+
+  if (isInitialLoading) {
+    return (
+      <div className="h-full overflow-hidden flex flex-col">
+        <ChatBubbleSkeleton />
+      </div>
+    );
+  }
 
   return (
     <div className="flex flex-col h-full max-w-4xl mx-auto px-4">

@@ -1,12 +1,16 @@
+import React, { Suspense, lazy } from "react";
 import { BrowserRouter as Router, Routes, Route } from "react-router-dom";
-import ChatbotScreen from "./components/pages/chatbot";
-import AdminScreen from "./components/pages/admin";
 import { Header } from "./components/layout/Header";
+import { GlobalSkeleton } from "./components/ui/GlobalSkeleton";
+import { ErrorBoundary } from "./components/ui/ErrorBoundary";
+
+// Lazy load page components
+const ChatbotScreen = lazy(() => import("./components/pages/chatbot"));
+const AdminScreen = lazy(() => import("./components/pages/admin"));
 
 function Layout({ children }: { children: React.ReactNode }) {
   return (
     <div className="flex flex-col h-screen bg-gray-50">
-      {/* //calls the header and then the children */}
       <Header />
       <main className="flex-1 overflow-hidden">{children}</main>
     </div>
@@ -15,14 +19,18 @@ function Layout({ children }: { children: React.ReactNode }) {
 
 function App() {
   return (
-    <Router>
-      <Layout>
-        <Routes>
-          <Route path="/" element={<ChatbotScreen />} />
-          <Route path="/admin" element={<AdminScreen />} />
-        </Routes>
-      </Layout>
-    </Router>
+    <ErrorBoundary>
+      <Router>
+        <Layout>
+          <Suspense fallback={<GlobalSkeleton />}>
+            <Routes>
+              <Route path="/" element={<ChatbotScreen />} />
+              <Route path="/admin" element={<AdminScreen />} />
+            </Routes>
+          </Suspense>
+        </Layout>
+      </Router>
+    </ErrorBoundary>
   );
 }
 
